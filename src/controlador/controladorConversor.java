@@ -1,20 +1,13 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controlador;
 
 import modelo.conversor;
 import vista.vistaConversor;
-
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 
 public class controladorConversor implements ActionListener {
 
-    // --- Referencias al Modelo y la Vista ---
     private conversor modelo;
     private vistaConversor vista;
 
@@ -22,46 +15,52 @@ public class controladorConversor implements ActionListener {
         this.modelo = m;
         this.vista = v;
 
-        this.vista.campoCelsius.addActionListener(this);
-        this.vista.campoFahrenheit.addActionListener(this);
-        this.vista.comboOpciones.addActionListener(this);
+        // Escuchamos a AMBOS botones
+        this.vista.botonCalcular.addActionListener(this);
+        this.vista.botonLimpiar.addActionListener(this); // <--- NUEVO
     }
-
 
     @Override
     public void actionPerformed(ActionEvent evento) {
-        // Averiguamos qué componente disparó el evento
-        Object fuenteDelEvento = evento.getSource();
+        
+        // --- CASO 1: LÓGICA BOTÓN LIMPIAR ---
+        if (evento.getSource() == vista.botonLimpiar) {
+            vista.setCelsius("");      // Borramos texto
+            vista.setFahrenheit("");   // Borramos texto
+            return; // Terminamos aquí, no hace falta calcular nada
+        }
+
+        // --- CASO 2: LÓGICA BOTÓN CALCULAR ---
         String opcionSeleccionada = vista.getOpcionSeleccionada();
 
         try {
-            // Caso 1: Se modificó Celsius o se eligió "C a F"
-            if (fuenteDelEvento == vista.campoCelsius || (fuenteDelEvento == vista.comboOpciones && opcionSeleccionada.equals("Celsius a Fahrenheit"))) {
-                // Leemos el valor de Celsius desde la Vista
+            if (opcionSeleccionada.equals("Celsius a Fahrenheit")) {
                 String celsiusTexto = vista.getCelsius();
-                // Lo convertimos a número
-                double celsiusNum = Double.parseDouble(celsiusTexto);
-                // Le pedimos al Modelo que calcule
-                double fahrenheitResultado = modelo.celsiusAFahrenheit(celsiusNum);
-                // Le decimos a la Vista que muestre el resultado (formateado)
-                vista.setFahrenheit(String.format("%.2f", fahrenheitResultado)); // ".2f" = 2 decimales
+                
+                if(!celsiusTexto.isEmpty()) {
+                    double celsiusNum = Double.parseDouble(celsiusTexto);
+                    double fahrenheitResultado = modelo.celsiusAFahrenheit(celsiusNum);
+                    vista.setFahrenheit(String.format("%.2f", fahrenheitResultado));
+                } else {
+                     JOptionPane.showMessageDialog(vista, "Ingresa un valor en Celsius.");
+                }
 
-                // Caso 2: Se modificó Fahrenheit o se eligió "F a C"
-            } else if (fuenteDelEvento == vista.campoFahrenheit || (fuenteDelEvento == vista.comboOpciones && opcionSeleccionada.equals("Fahrenheit a Celsius"))) {
-                // Leemos el valor de Fahrenheit desde la Vista
+            } else if (opcionSeleccionada.equals("Fahrenheit a Celsius")) {
                 String fahrenheitTexto = vista.getFahrenheit();
-                // Lo convertimos a número
-                double fahrenheitNum = Double.parseDouble(fahrenheitTexto);
-                // Le pedimos al Modelo que calcule
-                double celsiusResultado = modelo.fahrenheitACelsius(fahrenheitNum);
-                // Le decimos a la Vista que muestre el resultado (formateado)
-                vista.setCelsius(String.format("%.2f", celsiusResultado));
+                
+                if(!fahrenheitTexto.isEmpty()) {
+                    double fahrenheitNum = Double.parseDouble(fahrenheitTexto);
+                    double celsiusResultado = modelo.fahrenheitACelsius(fahrenheitNum);
+                    vista.setCelsius(String.format("%.2f", celsiusResultado));
+                } else {
+                     JOptionPane.showMessageDialog(vista, "Ingresa un valor en Fahrenheit.");
+                }
             }
 
         } catch (NumberFormatException error) {
             JOptionPane.showMessageDialog(vista,
                     "Error: Ingresa solo números válidos.",
-                    "Error de Entrada",
+                    "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
